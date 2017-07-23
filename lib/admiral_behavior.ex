@@ -1,12 +1,4 @@
 defmodule AdmiralBehavior do
-  @typedoc """
-  A coordinate is a combination of the column and row marking, such as "A1" or
-  "J10".
-  """
-  @type coordinate :: String.t
-  @type ship :: :aircraft_carrier | :battleship | :cruiser | :submarine | :destroyer
-  @type fire_result :: {coordinate, :miss | :hit | {:hit, :sunk, ship}}
-
   @doc """
   The initialize function is where you'll create *your* game board, laying out
   the locations of your ships. Use the letter "A" to denote a squre occupied by
@@ -77,7 +69,7 @@ defmodule AdmiralBehavior do
     ["",  "",  "",  "",  "",  "",  "",  "",  "",  ""],
   ]
   """
-  @callback fire([[String.t]], [coordinate], [fire_result], state :: any) :: coordinate | {coordinate, any}
+  @callback fire([[String.t]], [GameBoard.coordinate], [GameBoard.fire_result], state :: any) :: GameBoard.coordinate | {GameBoard.coordinate, any}
 
   @doc """
   Provide your team name with this callback.
