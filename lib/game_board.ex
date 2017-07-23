@@ -32,6 +32,18 @@ defmodule GameBoard do
     ]
   end
 
+  @doc """
+  Returns the column on the game board with the specified column name (A-J).
+
+  Examples:
+  iex> board = [
+  iex>   ["X", "Y", "Z"],
+  iex>   ["X", "Y", "Z"],
+  iex>   ["X", "Y", "Z"]
+  iex> ]
+  iex> GameBoard.get_column(board, "B")
+  {:ok, ["Y", "Y", "Y"]}
+  """
   @spec get_column(board, String.t) :: {:ok, [String.t]} | :invalid_column
   def get_column(board, column) when column in @valid_columns do
     {:ok, column_pos} = get_column_index(column)
@@ -49,6 +61,18 @@ defmodule GameBoard do
   end
   def get_column(_, _), do: :invalid_column
 
+  @doc """
+  Returns the specified row from the game board (1-based).
+
+  Examples:
+  iex> board = [
+  iex>   ["A", "A", "A"],
+  iex>   ["B", "B", "B"],
+  iex>   ["C", "C", "C"],
+  iex> ]
+  iex> GameBoard.get_row(board, 3)
+  {:ok, ["C", "C", "C"]}
+  """
   @spec get_row(board, pos_integer) :: {:ok, [String.t]} | :invalid_row
   def get_row(board, row) when row in @valid_rows do
     {:ok, row_index} = get_row_index(row)
@@ -57,6 +81,13 @@ defmodule GameBoard do
   end
   def get_row(_, _), do: :invalid_row
 
+  @doc """
+  Parses a coordinate string into a two-element {row, column} tuple.
+
+  Examples:
+  iex> GameBoard.parse_coordinate("D7")
+  {:ok, {"D", 7}}
+  """
   @spec parse_coordinate(String.t) :: {:ok, {String.t, non_neg_integer}} | :invalid_coordinate
   def parse_coordinate(coordinate) do
     coordinate = String.upcase(coordinate)
@@ -72,6 +103,23 @@ defmodule GameBoard do
     end
   end
 
+  @doc """
+  Places the specified ship on the board, oriented either horizontally or
+  vertically, starting at the specified coordinate.
+
+  Examples:
+  iex> board = [
+  iex>   ["", "", ""],
+  iex>   ["", "", ""],
+  iex>   ["", "", ""],
+  iex> ]
+  iex> GameBoard.place_ship(board, :destroyer, "B2", :vertical)
+  [
+    ["", "",  ""],
+    ["", "D", ""],
+    ["", "D", ""],
+  ]
+  """
   @spec place_ship(board, ship, coordinate, :horizontal | :vertical) :: board | {:error, :invalid_coordinate | column_update_error | row_update_error}
   def place_ship(board, ship_type, coordinate, :horizontal) do
     with  {:ok, {col, row}} <- parse_coordinate(coordinate),
