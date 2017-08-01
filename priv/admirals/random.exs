@@ -16,6 +16,10 @@ defmodule RandomAdmiral do
     initialize(blank_board, ships)
   end
 
+  def fire(_enemy_board, _previous_shots, _shot_results, _state) do
+    get_random_coordinate()
+  end
+
   defp initialize(board, [ship | rest_ships] = ships) do
     coordinate = get_random_coordinate()
     direction = pick_random_direction()

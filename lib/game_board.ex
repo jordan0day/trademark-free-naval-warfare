@@ -6,7 +6,7 @@ defmodule GameBoard do
   @type board :: [[String.t]]
   @type coordinate :: String.t
   @type ship :: :aircraft_carrier | :battleship | :cruiser | :submarine | :destroyer
-  @type fire_result :: {coordinate, :miss | :hit | {:hit, :sunk, ship}}
+  @type fire_result :: {coordinate, :miss | :hit | {:hit, :sunk, ship} | :duplicate_shot | :invalid_shot}
 
   @type column_update_error :: :invalid_position | :invalid_row | :invalid_ship | :position_occupied
   @type row_update_error :: :invalid_position | :invalid_column | :invalid_ship | :position_occupied
@@ -145,19 +145,46 @@ defmodule GameBoard do
     end
   end
 
-  # Helpers
   @spec get_column_index(String.t) :: {:ok, non_neg_integer} | :invalid_column
-  defp get_column_index(column) when column in @valid_columns do
+  def get_column_index(column) when column in @valid_columns do
     {:ok, Enum.find_index(@valid_columns, &(&1 == column))}
   end
-  defp get_column_index(_), do: :invalid_column
+  def get_column_index(_), do: :invalid_column
 
   @spec get_row_index(pos_integer) :: {:ok, non_neg_integer} | :invalid_row
-  defp get_row_index(row) when row in @valid_rows do
+  def get_row_index(row) when row in @valid_rows do
     {:ok, row - 1}
   end
-  defp get_row_index(_), do: :invalid_row
+  def get_row_index(_), do: :invalid_row
 
+  @spec validate_board(board) :: :valid | :invalid
+  def validate_board(board) do
+    # Rotate the board to find ships placed vertically.
+    rotated = rotate_board(board)
+    ships = [:aircraft_carrier, :battleship, :cruiser, :destroyer, :submarine]
+    results =
+      ships
+      |> Enum.map(fn ship ->
+        horizontal = ship_on_board?(ship, board)
+        vertical = ship_on_board?(ship, rotated)
+
+        {ship, horizontal || vertical}
+      end)
+      |> Enum.reject(fn
+        {_, true} -> true
+        _ -> false end)
+
+    if length(results) > 0 do
+      Enum.each(results, fn {ship, _} ->
+        IO.puts [IO.ANSI.red, "Ship #{inspect ship} was positioned incorrectly."]
+      end)
+      :invalid
+    else
+      :valid
+    end
+  end
+
+  # Helpers
   @spec update_board_column(board, String.t, [String.t]) :: {:ok, board}
   defp update_board_column(board, column_coord, new_column) do
     {:ok, column_number} = get_column_index(column_coord)
@@ -204,9 +231,6 @@ defmodule GameBoard do
 
   @spec update_row([String.t], String.t, ship) :: {:ok, [String.t]} | {:error, row_update_error}
   defp update_row(row_vals, start_col, ship_type) do
-    # IO.puts "Updating row: #{inspect row_vals} starting at column: #{start_col} with ship: #{inspect ship_type}"
-    # IO.puts "Size: #{inspect ship_size(ship_type)}"
-    # IO.puts "col index: #{inspect get_column_index(start_col)}"
     with  {:ok, size} <- ship_size(ship_type),
           {:ok, col_index} <- get_column_index(start_col),
           :ok <- validate_bounds(@valid_columns, col_index + size) do
@@ -236,6 +260,31 @@ defmodule GameBoard do
     else
       :ok
     end
+  end
+
+  @spec rotate_board(board) :: board
+  defp rotate_board(board) do
+    Enum.reduce(board, [], fn row, acc ->
+      cols = Enum.with_index(row)
+      Enum.map(cols, fn {element, index} ->
+        existing = Enum.at(acc, index, [])
+        existing ++ [element]
+      end)
+    end)
+  end
+
+  @spec ship_on_board?(ship, board) :: boolean
+  defp ship_on_board?(ship, board) do
+    symbol = ship_symbol(ship)
+    {:ok, size} = ship_size(ship)
+    flattened = List.flatten(board)
+    ship_list = List.duplicate(symbol, size)
+
+    count = Enum.count(flattened, &(&1 == symbol))
+    chunks = Enum.chunk(flattened, size, 1)
+    found? = ship_list in chunks
+
+    count == size && found?
   end
 
   @spec ship_size(ship) :: {:ok, 5 | 4 | 3 | 2} | :invalid_ship

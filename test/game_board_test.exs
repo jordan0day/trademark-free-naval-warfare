@@ -327,4 +327,48 @@ defmodule GameBoardTest do
       assert {:error, :position_occupied} = place_ship(new_board, :cruiser, "A2", :horizontal)
     end
   end
+
+  describe "validate board" do
+    test "valid board", %{sample_board: board} do
+      assert :valid = validate_board(board)
+    end
+
+    test "submarine occupying only two spaces", %{sample_board: board} do
+      new_board = update_board_at(board, 9, 9, "")
+      assert :invalid == validate_board(new_board)
+    end
+
+    test "battleship occupying five spaces", %{sample_board: board} do
+      new_board = update_board_at(board, 6, 0, "B")
+      assert :invalid == validate_board(new_board)
+    end
+
+    test "submarine split vertically", %{sample_board: board} do
+      new_board =
+        board
+        |> update_board_at(7, 9, "")
+        |> update_board_at(0, 9, "S")
+
+      assert :invalid == validate_board(new_board)
+    end
+
+    test "battleship split horizontally", %{sample_board: board} do
+      new_board =
+        board
+        |> update_board_at(6, 4, "")
+        |> update_board_at(6, 3, "")
+        |> update_board_at(6, 0, "B")
+        |> update_board_at(6, 9, "B")
+
+      assert :invalid == validate_board(new_board)
+    end
+  end
+
+  defp update_board_at(board, row_index, column_index, new_value) do
+    {first_rows, [row | rest_rows]} = Enum.split(board, row_index)
+    {first_cols, [_col | rest_cols]} = Enum.split(row, column_index)
+
+    new_row = first_cols ++ [new_value | rest_cols]
+    first_rows ++ [new_row | rest_rows]
+  end
 end
