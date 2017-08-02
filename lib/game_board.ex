@@ -145,18 +145,44 @@ defmodule GameBoard do
     end
   end
 
+  @doc """
+  Gets the 0-based index for the specified column. Returns :invalid_column if
+  the specified column is out of the allowed range.
+  Examples:
+  iex> GameBoard.get_column_index("A")
+  {:ok, 0}
+  iex> GameBoard.get_column_index("J")
+  {:ok, 9}
+  iex> GameBoard.get_column_index("Z")
+  :invalid_column
+  """
   @spec get_column_index(String.t) :: {:ok, non_neg_integer} | :invalid_column
   def get_column_index(column) when column in @valid_columns do
     {:ok, Enum.find_index(@valid_columns, &(&1 == column))}
   end
   def get_column_index(_), do: :invalid_column
 
+  @doc """
+  Gets the 0-based index for the row. It's just row - 1. This is mainly useful
+  to ensure the row is in the list of allowed rows. Returns :invalid_row if the
+  row is out of range.
+  Examples:
+  iex> GameBoard.get_row_index(1)
+  {:ok, 0}
+  iex> GameBoard.get_row_index(10)
+  {:ok, 9}
+  iex> GameBoard.get_row_index(99)
+  :invalid_row
+  """
   @spec get_row_index(pos_integer) :: {:ok, non_neg_integer} | :invalid_row
   def get_row_index(row) when row in @valid_rows do
     {:ok, row - 1}
   end
   def get_row_index(_), do: :invalid_row
 
+  @doc """
+  Validates that the board has all five ships correctly placed.
+  """
   @spec validate_board(board) :: :valid | :invalid
   def validate_board(board) do
     # Rotate the board to find ships placed vertically.
