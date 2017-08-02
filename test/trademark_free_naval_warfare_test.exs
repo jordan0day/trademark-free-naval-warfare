@@ -1,6 +1,6 @@
-defmodule TrademarkFreeNavalWarfareTest do
+defmodule TFNWTest do
   use ExUnit.Case
-  doctest TrademarkFreeNavalWarfare
+  doctest TFNW
 
   test "the truth" do
     assert 1 + 1 == 2

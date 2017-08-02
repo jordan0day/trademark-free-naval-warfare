@@ -23,4 +23,15 @@ and use this information when selecting where next to fire.
 
 ## Your task
 Your job in Trademark-Free Naval Warfare is to create a module which implements
-the AdmiralBehavior behavior.
+the AdmiralBehavior behavior. Create your module as an .exs file in the
+`priv/admirals` folder, alongside the two provided implementations.
+
+## Testing Your Code
+You can test your admiral's code by playing it against the two built-in
+admirals, `RandomAdmiral` and `SmarterRandomAdmiral`. Trigger a one-off game
+via `$ mix run -e 'TFNW.start_one("random.exs", "[your filename].exs")'`.
+
+By the time you're done, you should be able to beat `random.exs` *every* time.
+You should also be able to beat `smarter_random.exs` almost all the time, but
+it might get lucky once in a while.
+
