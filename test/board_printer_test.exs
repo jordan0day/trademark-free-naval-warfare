@@ -86,7 +86,7 @@ defmodule BoardPrinterTest do
       [IO.ANSI.white_background(), IO.ANSI.black(), "A", IO.ANSI.default_background(), IO.ANSI.default_color()],
       [" "],
       [" "],
-      [IO.ANSI.white_background(), IO.ANSI.black(), "*", IO.ANSI.default_background(), IO.ANSI.default_color()],
+      ["*"],
       [" "],
       [" "],
       [" "],
