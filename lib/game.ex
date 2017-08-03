@@ -58,7 +58,7 @@ defmodule Game do
       {{:valid, team1_state}, {:valid, team2_state}} ->
         IO.puts [IO.ANSI.red(), "Team 1: #{team1_state.name}", IO.ANSI.default_color(), " vs ", IO.ANSI.blue(), IO.ANSI.white_background(), "Team 2: #{team2_state.name}", IO.ANSI.default_color(), IO.ANSI.default_background()]
         IO.gets("Press enter to begin...")
-        {{:winner, winner}, _, turns} = play_round(team1_state, team2_state, 1)
+        {{:winner, winner}, _, turns} = play_round(team1_state, team2_state, 1, :team1)
         # Return the winning module
         IO.puts [IO.ANSI.green, "\nPlayer #{winner[:name]} wins in #{turns} turns!", IO.ANSI.default_color()]
         winner[:module]
@@ -74,8 +74,16 @@ defmodule Game do
     end
   end
 
-  @spec play_round(team, team, pos_integer) :: {{:winner, team}, {:loser, team}, pos_integer}
-  def play_round(own, enemy, turn) do
+  @spec play_round(team, team, pos_integer, :team1 | :team2) :: {{:winner, team}, {:loser, team}, pos_integer}
+  def play_round(own, enemy, turn, team_turn) do
+    IO.gets "Press any key to play turn #{turn}"
+    IO.puts [IO.ANSI.home()]
+
+    next_turn = case team_turn do
+      :team1 -> :team2
+      :team2 -> :team1
+    end
+
     case handle_fire(own) do
       {:ok, coordinate, new_state} ->
         new_shots_fired = [coordinate | own[:shots_fired]]
@@ -86,31 +94,38 @@ defmodule Game do
           new_shot_results = [fire_result | own[:shot_results]]
           new_enemy_board = update_enemy_board(own[:enemy_board], fire_result)
 
+          new_own =
+            own
+            |> Map.put(:shots_fired, new_shots_fired)
+            |> Map.put(:shot_results, new_shot_results)
+            |> Map.put(:enemy_board, new_enemy_board)
+            |> Map.put(:team_state, new_state)
+
+          display_board(new_own, enemy, team_turn)
+          display_shot_result(fire_result, own, enemy)
+
           if enemy_ships == [] do
             IO.puts "#{own[:name]} wins!"
             {{:winner, own}, {:loser, enemy}, turn}
           else
-            new_own =
-              own
-              |> Map.put(:shots_fired, new_shots_fired)
-              |> Map.put(:shot_results, new_shot_results)
-              |> Map.put(:enemy_board, new_enemy_board)
-              |> Map.put(:team_state, new_state)
-            play_round(new_enemy, new_own, turn + 1)
+            play_round(new_enemy, new_own, turn + 1, next_turn)
           end
         else
           :invalid_coordinate ->
             new_shot_results = [{coordinate, :invalid_shot} | own[:shot_results]]
-            IO.puts [IO.ANSI.red, "Team #{own[:name]} picked an invalid coordinate: #{coordinate}. Skipping turn..."]
+
             new_own =
               own
               |> Map.put(:shots_fired, new_shots_fired)
               |> Map.put(:shot_results, new_shot_results)
               |> Map.put(:team_state, new_state)
 
-            play_round(enemy, new_own, turn + 1)
+            display_board(new_own, enemy, team_turn)
+            IO.puts [IO.ANSI.red, "Team #{own[:name]} picked an invalid coordinate: #{coordinate}. Skipping turn..."]
+            play_round(enemy, new_own, turn + 1, next_turn)
         end
       {:firing_error, error} ->
+        display_board(own, enemy, team_turn)
         IO.puts [IO.ANSI.red, "Team #{own[:name]} call to fire/4 produced an error and have forfeited the game: #{inspect error}."]
         {{:winner, enemy}, {:loser, own}}
     end
@@ -230,5 +245,41 @@ defmodule Game do
         IO.puts "Team module #{inspect team_module} exited with #{inspect e} when calling team_name/0."
         {:team_name_error, e}
     end
+  end
+
+  defp display_board(own, enemy, :team1), do: BoardPrinter.display_boards(own, enemy)
+  defp display_board(own, enemy, :team2), do: BoardPrinter.display_boards(enemy, own)
+
+  defp display_shot_result({coord, :miss}, own, _enemy) do
+    IO.puts [
+      "Player ", IO.ANSI.green(), own.name, IO.ANSI.default_color(),
+      " fired at coordinate #{coord} and MISSED."]
+  end
+
+  defp display_shot_result({coord, :hit}, own, _enemy) do
+    IO.puts [
+      "Player ", IO.ANSI.green(), own.name, IO.ANSI.default_color(),
+      " fired at coordinate #{coord} and SCORED A HIT!"]
+  end
+
+  defp display_shot_result({coord, {:hit, :sunk, ship}}, own, enemy) do
+    IO.puts [
+      "Player ", IO.ANSI.green(), own.name, IO.ANSI.default_color(),
+      " fired at coordinate #{coord} and SUNK ",
+      IO.ANSI.green(), enemy.name, "'s ", IO.ANSI.default_color(), 
+      "#{inspect ship}!"]
+  end
+
+  defp display_shot_result({coord, other}, own, _enemy) do
+    result = case other do
+      :duplicate_shot -> "A DUPLICATE SHOT"
+      :invalid_shot -> "AN INVALID COORDINATE"
+      other -> "A #{inspect(other)}"
+    end
+
+    IO.puts [
+      "Player ", IO.ANSI.green(), own.name, IO.ANSI.default_color(),
+      " fired at coordinate #{coord} but that was ",
+      IO.ANSI.red(), result, IO.ANSI.default_color()]
   end
 end
