@@ -26,6 +26,43 @@ Your job in Trademark-Free Naval Warfare is to create a module which implements
 the AdmiralBehavior behavior. Create your module as an .exs file in the
 `priv/admirals` folder, alongside the two provided implementations.
 
+### Functions to implement
+`team_name/0` - This one's easy. It's the name you want displayed at the top of
+the screen during the game.
+
+`initialize/0` - This is the function called at the beginning of the game where
+you'll set up your game board, as well as set up an initial state you might want
+to keep track of.
+
+`fire/4` - This is the main driver of your game module. Here you'll choose what
+coordinate at which to fire next. The first argument is a board showing your
+previous shots, with "H" and "M" denoting previous shot results. The second
+argument is the list of previous shoot coordinates, order from newest to
+oldest (so the head of the list is the shot from the previous round). The third
+argument is the list of results, with a format like
+
+`{"A1", :miss}`
+
+`{"B2", :hit}`
+
+`{"C3", {:hit, :sunk, :battleship}}`
+
+`{"A1", :duplicate_shot}`
+
+`{"Z99", :invalid_shot}`
+
+This list, like the list of previous shots, is sorted newest-to-oldest. As the
+coordinate is included in the result tuple, the list of previous shots (the 2nd
+argument) is a bit superflouous, but I wasn't sure which form people would
+prefer.
+
+The fourth and final argument to `fire/4` is the _optional_ state value you
+previously returned, either from `initialize/0` or the previous call to `fire/4`.
+
+The return value of `fire/4` is either just a coordinate (like `"A1"`), or a
+tuple with the coordinate and the new state you want to track, like
+`{"A1", %{total_shots_ive_taken: 3}}`.
+
 ## Testing Your Code
 You can test your admiral's code by playing it against the two built-in
 admirals, `RandomAdmiral` and `SmarterRandomAdmiral`. Trigger a one-off game
