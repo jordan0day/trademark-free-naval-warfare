@@ -48,16 +48,13 @@ defmodule Game do
   end
 
   @spec play_game([module]) :: module
-  def play_game([_, _] = teams) do
-    [team1, team2] = Enum.shuffle(teams)
-
+  def play_game([team1, team2]) do
     result1 = setup_team(team1)
     result2 = setup_team(team2)
 
     case {result1, result2} do
       {{:valid, team1_state}, {:valid, team2_state}} ->
-        IO.puts [IO.ANSI.red(), "Team 1: #{team1_state.name}", IO.ANSI.default_color(), " vs ", IO.ANSI.blue(), IO.ANSI.white_background(), "Team 2: #{team2_state.name}", IO.ANSI.default_color(), IO.ANSI.default_background()]
-        IO.gets("Press enter to begin...")
+        IO.puts "Team 1: #{team1_state.name} vs Team 2: #{team2_state.name}"
         {{:winner, winner}, _, turns} = play_round(team1_state, team2_state, 1, :team1)
         # Return the winning module
         IO.puts [IO.ANSI.green, "\nPlayer #{winner[:name]} wins in #{turns} turns!", IO.ANSI.default_color()]
@@ -76,7 +73,7 @@ defmodule Game do
 
   @spec play_round(team, team, pos_integer, :team1 | :team2) :: {{:winner, team}, {:loser, team}, pos_integer}
   def play_round(own, enemy, turn, team_turn) do
-    IO.gets "Press any key to play turn #{turn}"
+    IO.gets "Press enter to play turn #{turn}"
     IO.puts [IO.ANSI.home()]
 
     next_turn = case team_turn do
