@@ -2,18 +2,12 @@ defmodule BrianAndCraig do
   @behaviour AdmiralBehavior
 
   def team_name() do
-    # now = Time.utc_now
-    # {us, _} = now.microsecond
-
     "Brian and Craig"
   end
 
   def initialize() do
     ships = Enum.shuffle([:aircraft_carrier, :battleship, :cruiser, :submarine, :destroyer])
     blank_board = GameBoard.get_blank_board()
-    # Just keep trying to randomly place ships until we've managed to place them
-    # all.
-
     {initialize(blank_board, ships), %{go_back_to: nil}}
   end
 
