@@ -49,8 +49,11 @@ defmodule TFNW do
 
     winner =
       final_results
-      |> Enum.sort_by(fn {module, wins} -> wins end)
+      |> Enum.group_by(fn {module, wins} -> wins end)
+      |> Enum.sort_by(fn {wins, modules} -> wins end)
       |> List.last
+      |> elem(1)
+      |> Enum.map(fn {module, wins} -> module end)
 
     IO.puts "****************************************"
     IO.puts "             OVERALL WINNER             "
