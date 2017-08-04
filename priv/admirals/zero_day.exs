@@ -6,31 +6,48 @@ defmodule ZeroDayAdmiral do
     RandomAdmiral.initialize()
   end
 
-  def fire(_, shots, shot_results, _state) do
+  def fire(_, [], _, _state), do: random_shot([])
+
+  def fire(_, previous_shots, shot_results, _state) do
     [last_shot | rest] = shot_results
 
-    case last_shot do
+    result = case last_shot do
       {coordinate, :hit} ->
-
+        random_nearby(coordinate, rest, previous_shots)
       _ ->
-        random_shot(history)
+        random_shot(previous_shots)
     end
+
+    result
   end
 
-  defp random_nearby(current_coord, previous_results) do
-    [last_shot | rest] = previous_results
-    case last_shot do
-      {coord, :hit} ->
-        {:ok, current} = GameBoard.parse_coordinate(current_coord)
-        {:ok, last} = GameBoard.parse_coordinate(coord)
-        orientation = orientation(current, last)
+  defp random_nearby(current_coord, previous_results, previous_shots) do
+    # [last_shot | rest] = previous_results
+    # {coord, _result} = last_shot
+    #case last_shot do
+    #  {coord, :hit} ->
+        #IO.puts "coord: #{inspect coord}"
+        # {:ok, current} = GameBoard.parse_coordinate(current_coord)
+        # {:ok, last} = GameBoard.parse_coordinate(coord)
+        # orientation = orientation(current, last)
 
-    end
+        {:ok, {col, row}} = GameBoard.parse_coordinate(current_coord)
+
+        nearby_cols = get_nearby_cols(col)
+        nearby_rows = get_nearby_rows(row)
+
+        potential_coords = adjacent_coordinates({col, row}, nearby_rows, nearby_cols, :unknown)
+
+        potential_coords
+        |> Enum.reject(fn coordinate -> coordinate in previous_shots end)
+        |> Enum.random
   end
 
   def get_nearby_rows(1), do: [2]
   def get_nearby_rows(10), do: [9]
-  def get_nearby_rows(row), do: [(row - 1), (row + 1)] 
+  def get_nearby_rows(row) do
+    [(row - 1), (row + 1)]
+  end
 
   def get_nearby_cols("A"), do: ["B"]
   def get_nearby_cols("B"), do: ["A", "C"]
