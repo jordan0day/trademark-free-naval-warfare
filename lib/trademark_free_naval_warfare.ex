@@ -16,7 +16,7 @@ defmodule TFNW do
     winner: player | nil
   }
 
-  def start do
+  def start(options \\ %{silent: true, single_step: false, iterations: 10}) do
     # Look up the list of contenders in priv/admirals
     admirals =
       Path.wildcard("priv/admirals/*.exs")
@@ -40,9 +40,7 @@ defmodule TFNW do
     admiral_wins = Map.new(admirals, fn admiral -> {admiral, 0} end)
 
     final_results = Enum.reduce(rounds, admiral_wins, fn round, results ->
-      winner = Game.play_game(round, %{silent: false, single_step: false})
-
-      Map.put(results, winner, results[winner] + 1)
+      play_rounds(round, options.iterations, results, options)
     end)
 
     IO.puts "Final results: #{inspect final_results, pretty: true}"
@@ -60,6 +58,14 @@ defmodule TFNW do
     IO.puts "****************************************"
     IO.puts "* #{inspect winner}"
     IO.puts "****************************************"
+  end
+
+  defp play_rounds(_round, 0, results, _options), do: results
+
+  defp play_rounds(round, iterations_remaining, results, options) do
+    winner = Game.play_game(round, options)
+    new_results = Map.put(results, winner, results[winner] + 1)
+    play_rounds(round, iterations_remaining - 1, new_results, options)
   end
 
   def start_one(player1_filename, player2_filename) do
