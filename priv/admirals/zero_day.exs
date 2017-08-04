@@ -21,7 +21,7 @@ defmodule ZeroDayAdmiral do
     result
   end
 
-  defp random_nearby(current_coord, previous_results, previous_shots) do
+  defp random_nearby(current_coord, _previous_results, previous_shots) do
     # [last_shot | rest] = previous_results
     # {coord, _result} = last_shot
     #case last_shot do
@@ -60,10 +60,10 @@ defmodule ZeroDayAdmiral do
   def get_nearby_cols("I"), do: ["H", "J"]
   def get_nearby_cols("J"), do: ["I"]
 
-  def adjacent_coordinates({col, row}, rows, cols, :horizontal) do
+  def adjacent_coordinates({_col, row}, _rows, cols, :horizontal) do
     adjacent_horizonal_coordinates(row, cols)
   end
-  def adjacent_coordinates({col, row}, rows, cols, :vertical) do
+  def adjacent_coordinates({col, _row}, rows, _cols, :vertical) do
     adjacent_vertical_coordinates(col, rows)
   end
   def adjacent_coordinates({col, row}, rows, cols, _) do
@@ -87,7 +87,7 @@ defmodule ZeroDayAdmiral do
     |> Enum.shuffle()
     |> Enum.at(0)
   end
-  
+
   def team_name() do
     "ZeroDay"
   end
