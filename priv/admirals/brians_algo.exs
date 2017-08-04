@@ -1,8 +1,8 @@
-defmodule BrianAndCraig do
+defmodule BriansAlgo do
   @behaviour AdmiralBehavior
 
   def team_name() do
-    "Brian and Craig"
+    "Brian's Algo"
   end
 
   def initialize() do
