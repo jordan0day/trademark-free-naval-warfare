@@ -40,7 +40,7 @@ defmodule TFNW do
     admiral_wins = Map.new(admirals, fn admiral -> {admiral, 0} end)
 
     final_results = Enum.reduce(rounds, admiral_wins, fn round, results ->
-      winner = Game.play_game(round)
+      winner = Game.play_game(round, %{silent: false, single_step: false})
 
       Map.put(results, winner, results[winner] + 1)
     end)
@@ -68,7 +68,7 @@ defmodule TFNW do
     [{player2, _}] = Code.load_file(player2_filename, "priv/admirals")
     IO.puts "Player2: #{inspect player2}"
 
-    Game.play_game([player1, player2])
+    Game.play_game([player1, player2], %{silent: false, single_step: false})
   end
 
   # Thanks Alan!
