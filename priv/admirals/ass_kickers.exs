@@ -20,7 +20,7 @@ defmodule AssKickers do
   end
 
   # in this direction, we finally hit a blank, move on to the next direction
-  def fire(enemy_board, previous_shots, [ { _, :miss } | rest_of_shots ], {orig_coord, [direction | rest]}) when direction != nil do
+  def fire(enemy_board, previous_shots, [ { _, :miss } | rest_of_shots ], {orig_coord, [direction | rest]}) do
     fire(enemy_board, previous_shots, [ {orig_coord, :hit} | rest_of_shots ], {orig_coord, rest})
   end
 
