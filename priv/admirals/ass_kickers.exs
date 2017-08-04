@@ -15,12 +15,12 @@ defmodule AssKickers do
   end
 
   # exhausted all directions, back to randomness
-  def fire(enemy_board, previous_shots, shot_results, {orig_coord, []}) do
+  def fire(enemy_board, previous_shots, shot_results, {_, []}) do
     fire(enemy_board, previous_shots, shot_results, nil)
   end
 
   # in this direction, we finally hit a blank, move on to the next direction
-  def fire(enemy_board, previous_shots, [ { _, :miss } | rest_of_shots ], {orig_coord, [direction | rest]} = state) when direction != nil do
+  def fire(enemy_board, previous_shots, [ { _, :miss } | rest_of_shots ], {orig_coord, [direction | rest]}) when direction != nil do
     fire(enemy_board, previous_shots, [ {orig_coord, :hit} | rest_of_shots ], {orig_coord, rest})
   end
 
@@ -53,7 +53,7 @@ defmodule AssKickers do
   end
 
   # randomly fire in a checkerboard "black" kind of pattern
-  def fire(enemy_board, previous_shots, shot_results, _state) do
+  def fire(_, _, shot_results, _state) do
     checkerboard_coords = get_checkerboard_coords()
 
     shots_fired =
@@ -73,12 +73,12 @@ defmodule AssKickers do
   end
 
   defp get_all_coords do
-    all_coords
+    all_coords()
     |> List.flatten
   end
 
   defp get_checkerboard_coords do
-    all_coords
+    all_coords()
     |> Enum.with_index
     |> Enum.map(fn {list, number} -> if rem(number, 2) == 0, do: Enum.reverse(list), else: list end)
     |> List.flatten
