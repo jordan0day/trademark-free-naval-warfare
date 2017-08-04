@@ -124,7 +124,7 @@ defmodule Game do
       {:firing_error, error} ->
         display_board(own, enemy, team_turn)
         IO.puts [IO.ANSI.red, "Team #{own[:name]} call to fire/4 produced an error and have forfeited the game: #{inspect error}."]
-        {{:winner, enemy}, {:loser, own}}
+        {{:winner, enemy}, {:loser, own}, turn}
     end
   end
 
