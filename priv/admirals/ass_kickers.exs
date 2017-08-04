@@ -14,18 +14,17 @@ defmodule AssKickers do
     |> GameBoard.place_ship(:submarine, "C6", :vertical)
   end
 
-
-  # exhausted all directions
+  # exhausted all directions, back to randomness
   def fire(enemy_board, previous_shots, shot_results, {orig_coord, []}) do
     fire(enemy_board, previous_shots, shot_results, nil)
   end
 
-  # in this direction, we finally hit a blank
+  # in this direction, we finally hit a blank, move on to the next direction
   def fire(enemy_board, previous_shots, [ { _, :miss } | rest_of_shots ], {orig_coord, [direction | rest]} = state) when direction != nil do
     fire(enemy_board, previous_shots, [ {orig_coord, :hit} | rest_of_shots ], {orig_coord, rest})
   end
 
-  # work your way in all directions
+  # work your way in all directions from the random hit
   def fire(enemy_board, previous_shots, [ { last_coord, result } | rest_of_shots ] = shot_results, {orig_coord, [direction | rest]} = state) when direction != nil and (result == :hit or elem(result, 0) == :hit) do
     all_coords = get_all_coords()
 
@@ -48,11 +47,12 @@ defmodule AssKickers do
     end
   end
 
-  # original random hit
+  # original random hit from checkerboard randomness
   def fire(enemy_board, previous_shots, [ { coord, :hit } | _ ] = shot_results, { coord, nil }) do
     fire(enemy_board, previous_shots, shot_results, { coord, [:up, :down, :left, :right] })
   end
 
+  # randomly fire in a checkerboard "black" kind of pattern
   def fire(enemy_board, previous_shots, shot_results, _state) do
     checkerboard_coords = get_checkerboard_coords()
 
@@ -91,15 +91,6 @@ defmodule AssKickers do
     |> Enum.map(fn letter -> Enum.map(1..10, fn n -> "#{letter}#{n}" end) end)
   end
 
-  defp get_random_coordinate() do
-    columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
-    rows = 1..10
-
-    col = Enum.random(columns)
-    row = Enum.random(rows)
-
-    "#{col}#{row}"
-  end
   def direction_from_coord(%{"letter" => letter, "number" => number}, :up) when number > 1 do
     "#{letter}#{number - 1}"
   end
@@ -144,12 +135,5 @@ defmodule AssKickers do
       10 => "J"
     }
     x[number]
-  end
-
-  defp pick_random_direction() do
-    case :rand.uniform(2) do
-      1 -> :horizontal
-      2 -> :vertical
-    end
   end
 end
