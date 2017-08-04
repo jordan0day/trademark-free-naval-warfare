@@ -20,10 +20,12 @@ defmodule BrianAndCraig do
     {last_coordinate, last_result} = last_shot
 
     if (last_result == :hit) do
-      if (is_nil(state[:go_back_to])) do
-        state = %{state | go_back_to: last_coordinate}
-      end
-      {next_coordinate(last_coordinate, shot_results), state}
+      new_state = if (is_nil(state[:go_back_to])) do
+                    %{state | go_back_to: last_coordinate}
+                  else
+                    state
+                  end
+      {next_coordinate(last_coordinate, shot_results), new_state}
     else
       if (is_nil(state[:go_back_to])) do
         {next_coordinate(last_coordinate, shot_results), state}
