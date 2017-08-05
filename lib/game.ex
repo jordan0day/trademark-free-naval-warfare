@@ -47,22 +47,21 @@ defmodule Game do
     end
   end
 
-  @spec play_game([module]) :: module
-  def play_game([team1, team2]) do
+  @spec play_game([module], map) :: module
+  def play_game([team1, team2], options) do
     result1 = setup_team(team1)
     result2 = setup_team(team2)
 
     case {result1, result2} do
       {{:valid, team1_state}, {:valid, team2_state}} ->
         IO.puts "Team 1: #{team1_state.name} vs Team 2: #{team2_state.name}"
-        {{:winner, winner}, _, turns} = play_round(team1_state, team2_state, 1, :team1)
+        {{:winner, winner}, _, turns} = play_round(team1_state, team2_state, 1, :team1, options)
         # Return the winning module
-        IO.puts [IO.ANSI.green, "\nPlayer #{winner[:name]} wins in #{turns} turns!", IO.ANSI.default_color()]
+        IO.puts [IO.ANSI.green(), "\nPlayer #{winner[:name]} wins in #{turns} turns!", IO.ANSI.default_color()]
         winner[:module]
       {:invalid, _} ->
         IO.puts [IO.ANSI.red(), "Team 1: #{inspect team1} produced an invalid board!"]
         IO.puts [IO.ANSI.blue(), "Team 2 wins by default."]
-
         team2
       {_, :invalid} ->
         IO.puts [IO.ANSI.blue(), "Team 2: #{inspect team2} produced an invalid board!"]
@@ -71,10 +70,18 @@ defmodule Game do
     end
   end
 
-  @spec play_round(team, team, pos_integer, :team1 | :team2) :: {{:winner, team}, {:loser, team}, pos_integer}
-  def play_round(own, enemy, turn, team_turn) do
-    IO.gets "Press enter to play turn #{turn}"
-    IO.puts [IO.ANSI.home()]
+  @spec play_round(team, team, pos_integer, :team1 | :team2, map) :: {{:winner, team}, {:loser, team}, pos_integer}
+  def play_round(own, enemy, turn, team_turn, options) do
+    cond do
+      options.single_step ->
+        IO.gets "Press enter to play turn #{turn}"
+        IO.puts [IO.ANSI.home()]
+      options.silent ->
+        Process.sleep(1)
+      true ->
+        Process.sleep(100)
+        IO.puts [IO.ANSI.home()]
+    end
 
     next_turn = case team_turn do
       :team1 -> :team2
@@ -98,14 +105,16 @@ defmodule Game do
             |> Map.put(:enemy_board, new_enemy_board)
             |> Map.put(:team_state, new_state)
 
-          display_board(new_own, enemy, team_turn)
-          display_shot_result(fire_result, own, enemy)
+          if !options.silent do
+            display_board(new_own, enemy, team_turn)
+            display_shot_result(fire_result, own, enemy)
+          end
 
           if enemy_ships == [] do
             IO.puts "#{own[:name]} wins!"
             {{:winner, own}, {:loser, enemy}, turn}
           else
-            play_round(new_enemy, new_own, turn + 1, next_turn)
+            play_round(new_enemy, new_own, turn + 1, next_turn, options)
           end
         else
           :invalid_coordinate ->
@@ -117,13 +126,18 @@ defmodule Game do
               |> Map.put(:shot_results, new_shot_results)
               |> Map.put(:team_state, new_state)
 
-            display_board(new_own, enemy, team_turn)
-            IO.puts [IO.ANSI.red, "Team #{own[:name]} picked an invalid coordinate: #{coordinate}. Skipping turn..."]
-            play_round(enemy, new_own, turn + 1, next_turn)
+            if !options.silent do
+              display_board(new_own, enemy, team_turn)
+              IO.puts [IO.ANSI.red(), "Team #{own[:name]} picked an invalid coordinate: #{coordinate}. Skipping turn..."]
+            end
+
+            play_round(enemy, new_own, turn + 1, next_turn, options)
         end
       {:firing_error, error} ->
-        display_board(own, enemy, team_turn)
-        IO.puts [IO.ANSI.red, "Team #{own[:name]} call to fire/4 produced an error and have forfeited the game: #{inspect error}."]
+        if !options.silent do
+          display_board(own, enemy, team_turn)
+          IO.puts [IO.ANSI.red(), "Team #{own[:name]} call to fire/4 produced an error and have forfeited the game: #{inspect error}."]
+        end
         {{:winner, enemy}, {:loser, own}, turn}
     end
   end
@@ -140,7 +154,7 @@ defmodule Game do
 
       {:ok, coords, state}
     rescue e ->
-      
+
       {:firing_error, e}
     end
   end
@@ -263,7 +277,7 @@ defmodule Game do
     IO.puts [
       "Player ", IO.ANSI.green(), own.name, IO.ANSI.default_color(),
       " fired at coordinate #{coord} and SUNK ",
-      IO.ANSI.green(), enemy.name, "'s ", IO.ANSI.default_color(), 
+      IO.ANSI.green(), enemy.name, "'s ", IO.ANSI.default_color(),
       "#{inspect ship}!"]
   end
 
